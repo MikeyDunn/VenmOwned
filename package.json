@@ -1,0 +1,20 @@
+{
+  "name": "venmowned",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "author": "mikeydunn",
+  "license": "ISC",
+  "bin": {
+    "vo": "bin/vo"
+  },
+  "dependencies": {
+    "chalk": "^2.4.1",
+    "keytar": "^4.3.0",
+    "minimist": "^1.2.0",
+    "prompt": "^1.0.0",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.2",
+    "username": "^4.0.0"
+  }
+}
