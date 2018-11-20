@@ -1,6 +1,6 @@
 // Public Functions
 
-module.exports = (args) => {
+module.exports = args => {
   _promptUser()
 }
 
@@ -9,19 +9,18 @@ module.exports = (args) => {
 function _promptUser() {
   // prompt service and options
   const prompt = require('prompt')
-  const promptParams = [{
-    name: 'token',
-    description: 'Enter your access token',
-    required: true
-  }]
+  const promptParams = [
+    {
+      name: 'token',
+      description: 'Enter your access token',
+      required: true
+    }
+  ]
 
   // prompt flow
   prompt.message = false
   prompt.start()
-  prompt.get(
-    promptParams,
-    _storeToken
-  )
+  prompt.get(promptParams, _storeToken)
 }
 
 async function _storeToken(err, result) {
@@ -34,11 +33,7 @@ async function _storeToken(err, result) {
   const keytarAccount = 'token'
 
   // store returned token
-  await keytar.setPassword(
-    keytarService,
-    keytarAccount,
-    result.token
-  )
+  await keytar.setPassword(keytarService, keytarAccount, result.token)
 
   console.log(chalk.green('token stored!'))
 }

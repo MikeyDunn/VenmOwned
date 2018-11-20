@@ -1,15 +1,15 @@
 // https://github.com/tjlav5/venmo-api/blob/master/src/api.js
-'use strict';
+'use strict'
 
-const rp = require('request-promise');
+const rp = require('request-promise')
 const rpVenmo = rp.defaults({
   baseUrl: 'https://api.venmo.com/v1/',
   json: true
-});
+})
 
 class Venmo {
   constructor(accessToken) {
-    this.accessToken = accessToken;
+    this.accessToken = accessToken
   }
 
   me() {
@@ -18,7 +18,7 @@ class Venmo {
       qs: {
         access_token: this.accessToken
       }
-    });
+    })
   }
 
   profile(id) {
@@ -27,7 +27,7 @@ class Venmo {
       qs: {
         access_token: this.accessToken
       }
-    });
+    })
   }
 
   friends(id, limit, offset) {
@@ -38,11 +38,11 @@ class Venmo {
         limit: limit,
         offset: offset
       }
-    });
+    })
   }
 
   getPayments(filter, limit, after, before) {
-    filter = filter || {};
+    filter = filter || {}
     return rpVenmo({
       uri: 'payments',
       qs: {
@@ -54,16 +54,16 @@ class Venmo {
         after: after,
         before: before
       }
-    });
+    })
   }
 
   getPayment(id) {
     return rpVenmo({
-      uri: ['payments',id].join('/'),
+      uri: ['payments', id].join('/'),
       qs: {
         access_token: this.accessToken
       }
-    });
+    })
   }
 
   createPayment(userID, note, amount, audience) {
@@ -77,7 +77,7 @@ class Venmo {
         amount: amount,
         audience: audience
       }
-    });
+    })
   }
 
   updatePayment(paymentID, action) {
@@ -88,10 +88,8 @@ class Venmo {
         access_token: this.accessToken,
         action: action
       }
-    });
+    })
   }
-
-
 }
 
-module.exports = Venmo;
+module.exports = Venmo

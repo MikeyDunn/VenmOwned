@@ -1,6 +1,6 @@
 // Public Functions
 
-module.exports = (args) => {
+module.exports = args => {
   _promptUser()
 }
 
@@ -9,26 +9,25 @@ module.exports = (args) => {
 function _promptUser() {
   // prompt service and options
   const prompt = require('prompt')
-  const promptParams = [{
-    name: 'id',
-    description: 'Enter the recipients user ID',
-    required: true
-  },
-  {
-    name: 'loops',
-    type: 'integer',
-    message: 'Input must be an integer',
-    description: 'Enter the number of pennies to send',
-    required: true
-  }]
+  const promptParams = [
+    {
+      name: 'id',
+      description: 'Enter the recipients user ID',
+      required: true
+    },
+    {
+      name: 'loops',
+      type: 'integer',
+      message: 'Input must be an integer',
+      description: 'Enter the number of pennies to send',
+      required: true
+    }
+  ]
 
   // prompt flow
   prompt.message = false
   prompt.start()
-  prompt.get(
-    promptParams,
-    _loopTransactions
-  )
+  prompt.get(promptParams, _loopTransactions)
 }
 
 async function _loopTransactions(err, result) {
@@ -47,7 +46,7 @@ async function _loopTransactions(err, result) {
       // output progress
       process.stdout.clearLine()
       process.stdout.cursorTo(0)
-      process.stdout.write(`running... ${i+1} of ${loops} `)
+      process.stdout.write(`running... ${i + 1} of ${loops} `)
       // generate note and send transaction
       const note = _generateNote(i)
       await venmo.createPayment(id, note, 0.01, 'private')
@@ -81,10 +80,7 @@ async function _getToken() {
   const keytar = require('keytar')
   const keytarService = 'venmowned'
   const keytarAccount = 'token'
-  const token = await keytar.getPassword(
-    keytarService,
-    keytarAccount
-  )
+  const token = await keytar.getPassword(keytarService, keytarAccount)
 
   return token
 }
