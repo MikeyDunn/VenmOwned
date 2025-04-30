@@ -1,86 +1,79 @@
-// Public Functions
+import chalk from 'chalk'
+import inquirer from 'inquirer'
 
-module.exports = args => {
-  _promptUser()
-}
+import catFacts from '../dictionaries/cat-facts.js'
+import { getToken } from '../services/tokenStorage.js'
+import Venmo from '../services/venmo.js'
 
-// Private Functions
+// Helper function to delay execution
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 
-function _promptUser() {
-  // prompt service and options
-  const prompt = require('prompt')
-  const promptParams = [
-    {
-      name: 'id',
-      description: 'Enter the recipients user ID',
-      required: true
-    },
-    {
-      name: 'loops',
-      type: 'integer',
-      message: 'Input must be an integer',
-      description: 'Enter the number of pennies to send',
-      required: true
-    }
-  ]
+export default async () => {
+  const token = await getToken()
+  if (!token) {
+    console.error(
+      chalk.red('No access token found. Please run "vo init" first.')
+    )
+    return
+  }
 
-  // prompt flow
-  prompt.message = false
-  prompt.start()
-  prompt.get(promptParams, _loopTransactions)
-}
-
-async function _loopTransactions(err, result) {
-  // services
-  const chalk = require('chalk')
-  const Venmo = require('../services/venmo')
-
-  // declerations
-  const { id, loops } = result
-  const token = await _getToken()
   const venmo = new Venmo(token)
 
   try {
-    // loop transactions
-    for (let i = 0; i < loops; i++) {
-      // output progress
+    const { userId, pennies } = await inquirer.prompt([
+      {
+        type: 'input',
+        name: 'userId',
+        message: 'Enter recipient user ID (or "q" to quit)',
+        validate: input =>
+          input === 'q' || input.length > 0 || 'User ID is required'
+      },
+      {
+        type: 'input',
+        name: 'pennies',
+        message: 'Enter number of pennies to send',
+        validate: input => {
+          if (input === 'q') return true
+          const num = parseInt(input)
+          return !isNaN(num) && num > 0 || 'Please enter a valid positive number'
+        },
+        when: answers => answers.userId !== 'q'
+      }
+    ])
+
+    if (userId === 'q') {
+      console.log(chalk.yellow('Exiting...'))
+      return
+    }
+
+    console.log(chalk.blue(`Starting to send ${pennies} transactions...`))
+
+    // Send the requested number of transactions with a delay between each
+    for (let i = 0; i < parseInt(pennies); i++) {
+      const note =
+        i === 0
+          ? 'Welcome to CatFacts! 🐱'
+          : catFacts[Math.floor(Math.random() * catFacts.length)]
+      await venmo.createPayment(userId, note, 0.01, 'private')
+
+      // Clear the current line and show progress
       process.stdout.clearLine()
       process.stdout.cursorTo(0)
-      process.stdout.write(`running... ${i + 1} of ${loops} `)
-      // generate note and send transaction
-      const note = _generateNote(i)
-      await venmo.createPayment(id, note, 0.01, 'private')
+      process.stdout.write(`Progress: ${i + 1}/${pennies} transactions sent`)
+
+      // Add a 2-second delay between transactions to avoid rate limiting
+      if (i < parseInt(pennies) - 1) {
+        await delay(2000)
+      }
     }
-    // success message
-    console.log(chalk.green('owned!'))
-  } catch (e) {
-    // error message
-    console.log(chalk.red(e.error.error.message))
+
+    // Clear the progress line and show completion
+    process.stdout.clearLine()
+    process.stdout.cursorTo(0)
+    console.log(
+      chalk.green(`Successfully sent ${pennies} pennies to ${userId}`)
+    )
+  } catch (error) {
+    console.error(chalk.red('Error:', error.message))
   }
-}
-
-function _generateNote(i) {
-  // dictionary
-  const catFactsArr = require('../dictionaries/cat-facts')
-
-  // generate note
-  const randNum = Math.floor(1000 + Math.random() * 9000)
-  const factNum = Math.floor(Math.random() * catFactsArr.length)
-  const fact = catFactsArr[factNum]
-  const welcomeNote = `Thanks for signing up for Cat Facts! ${randNum}`
-  const note = `Cat Fact #${randNum}: ${fact}
-    <To cancel Cat Facts, reply 'STOP'>`
-
-  // return welcome note on first loop
-  return i === 0 ? welcomeNote : note
-}
-
-async function _getToken() {
-  // keytar service and options
-  const keytar = require('keytar')
-  const keytarService = 'venmowned'
-  const keytarAccount = 'token'
-  const token = await keytar.getPassword(keytarService, keytarAccount)
-
-  return token
 }

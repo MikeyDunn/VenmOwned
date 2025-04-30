@@ -1,42 +1,24 @@
-const minimist = require('minimist')
-const chalk = require('chalk')
+// Main entry point for the CLI application
+import chalk from 'chalk'
+import minimist from 'minimist'
 
-module.exports = async () => {
-  const rawArgs = process.argv.slice(2)
-  const args = minimist(rawArgs)
+import friends from './commands/friends.js'
+import help from './commands/help.js'
+import init from './commands/init.js'
+import own from './commands/own.js'
+import version from './commands/version.js'
 
-  // set command
-  let cmd = args._[0] || 'help'
+const commands = { init, own, friends, version, help }
 
-  // check for common flags
-  if (args.version || args.v) cmd = 'version'
-  if (args.help || args.h) cmd = 'help'
+export default async () => {
+  const args = minimist(process.argv.slice(2))
+  const cmd = args._[0] || 'help'
 
-  // determine and run commannd
-  switch (cmd) {
-    case 'init':
-      require('./commands/init')(args)
-      break
-
-    case 'own':
-      require('./commands/own')(args)
-      break
-
-    case 'friends':
-      require('./commands/friends')(args)
-      break
-
-    case 'version':
-      require('./commands/version')(args)
-      break
-
-    case 'help':
-      require('./commands/help')(args)
-      break
-
-    default:
-      const chalkMessage = chalk.red(`"${cmd}" is not a valid command!`)
-      console.error(chalkMessage)
-      break
+  try {
+    const handler = commands[cmd]
+    if (!handler) throw new Error(`"${cmd}" is not a valid command!`)
+    await handler(args)
+  } catch (error) {
+    console.error(chalk.red('Error:', error.message))
   }
 }

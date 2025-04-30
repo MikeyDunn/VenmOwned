@@ -1,95 +1,82 @@
 // https://github.com/tjlav5/venmo-api/blob/master/src/api.js
-'use strict'
-
-const rp = require('request-promise')
-const rpVenmo = rp.defaults({
-  baseUrl: 'https://api.venmo.com/v1/',
-  json: true
-})
+import fetch from 'node-fetch'
 
 class Venmo {
-  constructor(accessToken) {
+  constructor (accessToken) {
     this.accessToken = accessToken
+    this.baseUrl = 'https://api.venmo.com/v1/'
   }
 
-  me() {
-    return rpVenmo({
-      uri: 'me',
-      qs: {
-        access_token: this.accessToken
-      }
+  async me () {
+    const response = await fetch(
+      `${this.baseUrl}me?access_token=${this.accessToken}`
+    )
+    return response.json()
+  }
+
+  async profile (id) {
+    const response = await fetch(
+      `${this.baseUrl}users/${id}?access_token=${this.accessToken}`
+    )
+    return response.json()
+  }
+
+  async friends (id, limit, offset) {
+    const response = await fetch(
+      `${this.baseUrl}users/${id}/friends?access_token=${this.accessToken}&limit=${limit}&offset=${offset}`
+    )
+    return response.json()
+  }
+
+  async getPayments (filter = {}, limit, after, before) {
+    const params = new URLSearchParams({
+      access_token: this.accessToken,
+      ...filter,
+      limit,
+      after,
+      before
     })
+    const response = await fetch(`${this.baseUrl}payments?${params}`)
+    return response.json()
   }
 
-  profile(id) {
-    return rpVenmo({
-      uri: ['users', id].join('/'),
-      qs: {
-        access_token: this.accessToken
-      }
-    })
+  async getPayment (id) {
+    const response = await fetch(
+      `${this.baseUrl}payments/${id}?access_token=${this.accessToken}`
+    )
+    return response.json()
   }
 
-  friends(id, limit, offset) {
-    return rpVenmo({
-      uri: ['users', id, 'friends'].join('/'),
-      qs: {
-        access_token: this.accessToken,
-        limit: limit,
-        offset: offset
-      }
-    })
-  }
-
-  getPayments(filter, limit, after, before) {
-    filter = filter || {}
-    return rpVenmo({
-      uri: 'payments',
-      qs: {
-        access_token: this.accessToken,
-        action: filter.action,
-        actor: filter.actor,
-        status: filter.status,
-        limit: limit,
-        after: after,
-        before: before
-      }
-    })
-  }
-
-  getPayment(id) {
-    return rpVenmo({
-      uri: ['payments', id].join('/'),
-      qs: {
-        access_token: this.accessToken
-      }
-    })
-  }
-
-  createPayment(userID, note, amount, audience) {
-    return rpVenmo({
+  async createPayment (userID, note, amount, audience) {
+    const response = await fetch(`${this.baseUrl}payments`, {
       method: 'POST',
-      uri: 'payments',
-      body: {
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
         access_token: this.accessToken,
         user_id: userID,
-        note: note,
-        amount: amount,
-        audience: audience
-      }
+        note,
+        amount,
+        audience
+      })
     })
+    return response.json()
   }
 
-  updatePayment(paymentID, action) {
-    return rpVenmo({
+  async updatePayment (paymentID, action) {
+    const response = await fetch(`${this.baseUrl}payments/${paymentID}`, {
       method: 'PUT',
-      uri: ['payments', paymentID].join('/'),
-      body: {
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
         access_token: this.accessToken,
-        action: action
-      }
+        action
+      })
     })
+    return response.json()
   }
 }
 
-module.exports = Venmo
+export default Venmo

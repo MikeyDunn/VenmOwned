@@ -1,74 +1,51 @@
-// services
-const keytar = require('keytar')
-const chalk = require('chalk')
-const Venmo = require('../services/venmo')
+// Command to list and filter Venmo friends
+import chalk from 'chalk'
 
-// keytar options
-const keytarService = 'venmowned'
-const keytarAccount = 'token'
+import { getToken } from '../services/tokenStorage.js'
+import Venmo from '../services/venmo.js'
 
-// Public Functions
+export default async args => {
+  try {
+    // Get and validate Venmo token
+    const token = await getToken()
+    if (!token)
+      throw new Error('No access token found. Please run "vo init" first.')
 
-module.exports = async args => {
-  // venmo instance
-  const token = await _getToken()
-  const venmo = new Venmo(token)
+    // Initialize Venmo client and get user's ID
+    const venmo = new Venmo(token)
+    const { data: { user: { id } } } = await venmo.me()
 
-  // get user's ID
-  const responseMe = await venmo.me()
-  const userId = responseMe.data.user.id
+    // Get all friends with pagination
+    let friends = await _getFriends(id, venmo)
 
-  // get user's friends
-  let friends = await _getFriends(userId)
+    // Filter friends if search term provided
+    if (args.find || args.f) {
+      const filter = (args.find || args.f).toLowerCase()
+      friends = friends.filter(f =>
+        f.display_name.toLowerCase().includes(filter)
+      )
+    }
 
-  // filter if command is finding
-  const findString = args.find || args.f
-  if (findString) friends = _filterFriends(findString, friends)
-
-  _printList(friends)
+    // Display friends list
+    friends.forEach(f => console.log(`${f.display_name} (${f.id})`))
+  } catch (error) {
+    console.error(chalk.red('Error:', error.message))
+  }
 }
 
-// Private Functions
-
-async function _getFriends(id) {
-  // venmo instance
-  const token = await _getToken()
-  const venmo = new Venmo(token)
-
-  // loop storage
+// Helper function to fetch all friends using pagination
+const _getFriends = async (id, venmo) => {
   let friends = []
-  let done = false
   let offset = 0
 
-  while (!done) {
-    const responseFriends = await venmo.friends(id, 10, offset)
-    const { data, pagination } = responseFriends
-    done = !pagination.next
-    offset += 10
+  // Fetch friends in batches of 10 until no more results
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const { data, pagination } = await venmo.friends(id, 10, offset)
     friends = friends.concat(data)
+    if (!pagination.next) break
+    offset += 10
   }
 
   return friends
-}
-
-function _filterFriends(filterString, dataArr) {
-  return dataArr.filter(item => {
-    const name = item.display_name.toLowerCase()
-    const filter = filterString.toLowerCase()
-    return name.includes(filter)
-  })
-}
-
-async function _printList(dataArr) {
-  return dataArr.map(item => {
-    const { display_name, id } = item
-    const username = chalk.white(`${display_name}`)
-    const userId = chalk.gray(`- ${id}`)
-    console.log(username, userId)
-  })
-}
-
-async function _getToken() {
-  const token = await keytar.getPassword(keytarService, keytarAccount)
-  return token
 }

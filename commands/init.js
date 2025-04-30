@@ -1,39 +1,23 @@
-// Public Functions
+import chalk from 'chalk'
+import inquirer from 'inquirer'
 
-module.exports = args => {
-  _promptUser()
-}
+import { setToken } from '../services/tokenStorage.js'
 
-// Private Functions
-
-function _promptUser() {
-  // prompt service and options
-  const prompt = require('prompt')
-  const promptParams = [
-    {
+export default async () => {
+  try {
+    const { token } = await inquirer.prompt([{
+      type: 'password',
       name: 'token',
-      description: 'Enter your access token',
-      required: true
+      message: 'Enter your access token',
+      validate: input => input.length > 0 || 'Access token is required'
+    }])
+
+    if (await setToken(token)) {
+      console.log(chalk.green('Token stored successfully!'))
+    } else {
+      console.error(chalk.red('Failed to store token.'))
     }
-  ]
-
-  // prompt flow
-  prompt.message = false
-  prompt.start()
-  prompt.get(promptParams, _storeToken)
-}
-
-async function _storeToken(err, result) {
-  // services
-  const chalk = require('chalk')
-  const keytar = require('keytar')
-
-  // keytar options
-  const keytarService = 'venmowned'
-  const keytarAccount = 'token'
-
-  // store returned token
-  await keytar.setPassword(keytarService, keytarAccount, result.token)
-
-  console.log(chalk.green('token stored!'))
+  } catch (error) {
+    console.error(chalk.red('Error:', error.message))
+  }
 }
