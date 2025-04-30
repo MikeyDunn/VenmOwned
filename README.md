@@ -6,10 +6,6 @@ Command line interface for sending mass transactions through the Venmo API.
 
 This project was created as an opportunity to build a command line interface and become more familiar with Venmo's public APIs.
 
-### Author
-
-Mike Dunn is a senior Front-end Developer with 5+ years of professional experience. Seeking to help deliver high quality applications through excellent coding practices and technical leadership. Specializing in semantics, optimization and system design.
-
 ### Application Structure
 
 `/bin` - Bin file to provide a system path command
@@ -78,3 +74,7 @@ This tool is provided for educational purposes only. The author is not responsib
 ### Built With
 
 * [NodeJS](https://nodejs.org/) - JavaScript Run-Time Environment
+
+### Author
+
+Mike Dunn is a senior Front-end Developer with 5+ years of professional experience. Seeking to help deliver high quality applications through excellent coding practices and technical leadership. Specializing in semantics, optimization and system design.
