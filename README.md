@@ -47,6 +47,14 @@ $ npm link
 
 `$ vo own` - provides prompt for passing user ID and transaction loops to send
 
+### Retrieving Token
+
+1. Login to venmo.com
+2. Open network dev console
+3. Find "https://api.venmo.com/graphql" request
+4. Find  request header "authorization"
+5. Copy "xxxx" token from "Bearer xxxx" value
+
 ### Built With
 
 * [NodeJS](https://nodejs.org/) - JavaScript Run-Time Environment
